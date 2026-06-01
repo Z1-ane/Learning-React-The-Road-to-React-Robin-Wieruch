@@ -1,10 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const App = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(
+    localStorage.getItem("search") ?? "React",
+  );
   function handleSearch(e) {
     setSearchTerm(e.target.value);
   }
+  useEffect(() => {
+    console.log("Hello");
+    localStorage.setItem("search", searchTerm);
+  }, [searchTerm]);
   const stories = [
     {
       title: "React",
@@ -43,7 +49,7 @@ const Search = ({ searchTerm, onSearch }) => {
   return (
     <div>
       <label htmlFor="search">Search: </label>
-      <input id="search" type="text" value={searchTerm} onChange={onSearch} />
+      <input id="search" value={searchTerm} type="text" onChange={onSearch} />
     </div>
   );
 };
