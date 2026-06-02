@@ -1,16 +1,21 @@
 import { useState, useEffect } from "react";
+const useStorageState = (key, initialState) => {
+  const [value, setValue] = useState(localStorage.getItem(key) ?? initialState);
+  useEffect(() => {
+    console.log("Hello");
+    localStorage.setItem(key, value);
+  }, [value]);
+
+  return [value, setValue];
+};
 
 const App = () => {
-  const [searchTerm, setSearchTerm] = useState(
-    localStorage.getItem("search") ?? "React",
-  );
+  const [searchTerm, setSearchTerm] = useStorageState("search", "React");
+
   function handleSearch(e) {
     setSearchTerm(e.target.value);
   }
-  useEffect(() => {
-    console.log("Hello");
-    localStorage.setItem("search", searchTerm);
-  }, [searchTerm]);
+
   const stories = [
     {
       title: "React",
