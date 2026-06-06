@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, act, useReducer } from "react";
 
 const initialStories = [
   {
@@ -28,6 +28,18 @@ const getAsyncStories = () => {
     }, 2000);
   });
 };
+const storiesReducer = (state, action) => {
+  switch (action.type) {
+    case "SET_STORIES":
+      return action.payload;
+    case "REMOVE_STORY":
+      return state.filter(
+        (state) => action.payload.objectID !== state.objectID,
+      );
+    default:
+      throw new error();
+  }
+};
 const useStorageState = (key, initialState) => {
   const [value, setValue] = useState(localStorage.getItem(key) ?? initialState);
   useEffect(() => {
@@ -40,19 +52,32 @@ const useStorageState = (key, initialState) => {
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useStorageState("search", "React");
-  const [stories, setStories] = useState([]);
-
+  const [stories, dispatchStories] = useReducer(storiesReducer, []);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
   useEffect(() => {
-    getAsyncStories().then((result) => setStories(result.data.stories));
+    setIsLoading(true);
+    getAsyncStories()
+      .then((result) => {
+        dispatchStories({
+          type: "SET_STORIES",
+          payload: result.data.stories,
+        });
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setIsError(true);
+        setIsLoading(false);
+      });
   }, []);
   function handleSearch(e) {
     setSearchTerm(e.target.value);
   }
   function handleRemoveStory(item) {
-    const newStories = stories.filter(
-      (story) => story.objectID !== item.objectID,
-    );
-    setStories(newStories);
+    dispatchStories({
+      type: "REMOVE_STORY",
+      payload: item,
+    });
   }
   const searchedStories = stories.filter((story) =>
     story.title.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -72,8 +97,12 @@ const App = () => {
       {/* <Search searchTerm={searchTerm} onSearch={handleSearch} /> */}
 
       <hr />
-
-      <List list={searchedStories} onRemoveItem={handleRemoveStory} />
+      {isError && <p>Something Went Wrong</p>}
+      {isLoading ? (
+        <p>Loading:::</p>
+      ) : (
+        <List list={searchedStories} onRemoveItem={handleRemoveStory} />
+      )}
     </div>
   );
 };
@@ -106,14 +135,6 @@ const InputWithLabel = ({
     </>
   );
 };
-// const Search = ({ searchTerm, onSearch }) => {
-//   return (
-//     <div>
-//       <label htmlFor="search">Search: </label>
-//       <input id="search" value={searchTerm} type="text" onChange={onSearch} />
-//     </div>
-//   );
-// };
 
 const List = ({ list, onRemoveItem }) => (
   <ul>
