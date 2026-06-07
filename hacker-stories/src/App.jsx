@@ -28,22 +28,29 @@ const getAsyncStories = () => {
     }, 2000);
   });
 };
+const STORIES_ACTIONS = {
+  SET_STORIES: "SET_STORIES",
+  REMOVE_STORY: "REMOVE_STORY",
+};
+
 const storiesReducer = (state, action) => {
   switch (action.type) {
-    case "SET_STORIES":
+    case STORIES_ACTIONS.SET_STORIES:
       return action.payload;
-    case "REMOVE_STORY":
+
+    case STORIES_ACTIONS.REMOVE_STORY:
       return state.filter(
-        (state) => action.payload.objectID !== state.objectID,
+        (story) => story.objectID !== action.payload.objectID,
       );
+
     default:
-      throw new error();
+      throw new Error();
   }
 };
+
 const useStorageState = (key, initialState) => {
   const [value, setValue] = useState(localStorage.getItem(key) ?? initialState);
   useEffect(() => {
-    console.log("Hello");
     localStorage.setItem(key, value);
   }, [value]);
 
@@ -60,7 +67,7 @@ const App = () => {
     getAsyncStories()
       .then((result) => {
         dispatchStories({
-          type: "SET_STORIES",
+          type: STORIES_ACTIONS.SET_STORIES,
           payload: result.data.stories,
         });
         setIsLoading(false);
@@ -75,7 +82,7 @@ const App = () => {
   }
   function handleRemoveStory(item) {
     dispatchStories({
-      type: "REMOVE_STORY",
+      type: STORIES_ACTIONS.REMOVE_STORY,
       payload: item,
     });
   }
