@@ -80,7 +80,7 @@ const App = () => {
     isLoading: true,
     isError: false,
   });
-  useEffect(() => {
+  const handleFetchStories = useCallback(() => {
     if (!searchTerm) return;
     fetch(`${API_ENDPOINT}${searchTerm}`)
       .then((response) => response.json())
@@ -92,6 +92,11 @@ const App = () => {
       })
       .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
   }, [searchTerm]);
+
+  useEffect(() => {
+    handleFetchStories();
+  }, [handleFetchStories]);
+
   function handleSearch(e) {
     setSearchTerm(e.target.value);
   }
