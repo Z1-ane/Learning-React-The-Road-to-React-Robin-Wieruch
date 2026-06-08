@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useReducer } from "react";
 
+const API_ENDPOINT = "https://hn.algolia.com/api/v1/search?query=";
 const initialStories = [
   {
     title: "React",
@@ -80,18 +81,16 @@ const App = () => {
     isError: false,
   });
   useEffect(() => {
-    dispatchStories({ type: "STORIES_FETCH_INIT" });
-    getAsyncStories()
+    fetch(`${API_ENDPOINT}REACT`)
+      .then((response) => response.json())
       .then((result) => {
         dispatchStories({
           type: "STORIES_FETCH_SUCCESS",
-          payload: result.data.stories,
+          payload: result.hits,
         });
       })
-      .catch(() => {
-        dispatchStories({ type: "STORIES_FETCH_FAILURE" });
-      });
-  }, []);
+      .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
+  });
   function handleSearch(e) {
     setSearchTerm(e.target.value);
   }
