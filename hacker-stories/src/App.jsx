@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useReducer } from "react";
-
+import { useState, useEffect, useRef, useReducer, useCallback } from "react";
+import axios from "axios";
 const API_ENDPOINT = "https://hn.algolia.com/api/v1/search?query=";
 const initialStories = [
   {
@@ -75,31 +75,38 @@ const useStorageState = (key, initialState) => {
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useStorageState("search", "React");
+  const [url, setUrl] = useState(`${API_ENDPOINT}${searchTerm}`);
   const [stories, dispatchStories] = useReducer(storiesReducer, {
     data: [],
     isLoading: true,
     isError: false,
   });
-  const handleFetchStories = useCallback(() => {
-    if (!searchTerm) return;
-    fetch(`${API_ENDPOINT}${searchTerm}`)
-      .then((response) => response.json())
-      .then((result) => {
-        dispatchStories({
-          type: "STORIES_FETCH_SUCCESS",
-          payload: result.hits,
-        });
-      })
-      .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
-  }, [searchTerm]);
+  const handleFetchStories = useCallback(async () => {
+    dispatchStories({ type: "STORIES_FETCH_INIT" });
+
+    try {
+      const result = await axios.get(url);
+
+      dispatchStories({
+        type: "STORIES_FETCH_SUCCESS",
+        payload: result.data.hits,
+      });
+    } catch {
+      dispatchStories({ type: "STORIES_FETCH_FAILURE" });
+    }
+  }, [url]);
 
   useEffect(() => {
     handleFetchStories();
   }, [handleFetchStories]);
 
-  function handleSearch(e) {
+  function handleSearchInput(e) {
     setSearchTerm(e.target.value);
   }
+  const handleSearchSubmit = (e) => {
+    setUrl(`${API_ENDPOINT}${searchTerm}`);
+    e.preventDefault();
+  };
   function handleRemoveStory(item) {
     dispatchStories({
       type: "REMOVE_STORY",
@@ -109,18 +116,30 @@ const App = () => {
   const searchedStories = stories.data.filter((story) =>
     story.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
-  return (
-    <div>
-      <h1>My Hacker Stories</h1>
+  const SearchForm = ({ searchTerm, onSearchInput, onSearchSubmit }) => (
+    <form onSubmit={onsearchSubmit}>
       <InputWithLabel
         id="search"
         value={searchTerm}
         isFocused
-        onInputChange={handleSearch}
+        onInputChange={handleSearchInput}
       >
         <strong>Search:</strong>
       </InputWithLabel>
 
+      <button type="submit" disabled={!searchTerm}>
+        Submit
+      </button>
+    </form>
+  );
+  return (
+    <div>
+      <h1>My Hacker Stories</h1>
+      <SearchForm
+        searchTerm={searchTerm}
+        onSearchInput={handleSearchInput}
+        onsearchSubmit={handleSearchSubmit}
+      />
       <hr />
       {stories.isError && <p>Something Went Wrong</p>}
       {stories.isLoading ? (
