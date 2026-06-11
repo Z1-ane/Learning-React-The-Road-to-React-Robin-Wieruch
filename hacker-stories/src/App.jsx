@@ -117,7 +117,7 @@ const App = () => {
     story.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
   const SearchForm = ({ searchTerm, onSearchInput, onSearchSubmit }) => (
-    <form onSubmit={onsearchSubmit}>
+    <form onSubmit={onSearchSubmit}>
       <InputWithLabel
         id="search"
         value={searchTerm}
